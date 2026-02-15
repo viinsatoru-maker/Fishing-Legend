@@ -1,0 +1,2835 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishing Legend - Dengan Fitur Arena & Gamepass (FIXED)</title>
+    
+    <style>
+        /* [CSS tetap sama seperti sebelumnya] */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #87CEEB, #1E90FF);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+        }
+
+        .spot-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .spot-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            background: #1E90FF;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .spot-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .spot-btn.active {
+            background: #FFD700;
+            color: #000;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .fishing-area {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .water {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(30, 144, 255, 0.8));
+        }
+
+        .fishing-rod {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .rod {
+            width: 200px;
+            height: 4px;
+            background: #8B4513;
+            transform: rotate(-30deg);
+            transform-origin: left center;
+        }
+
+        .fishing-line {
+            position: absolute;
+            left: 195px;
+            top: 2px;
+            width: 2px;
+            height: 150px;
+            background: white;
+            transition: height 0.5s ease-in-out;
+        }
+
+        .bobber {
+            position: absolute;
+            left: -5px;
+            top: 130px;
+            width: 10px;
+            height: 10px;
+            background: red;
+            border-radius: 50%;
+        }
+
+        .hook {
+            position: absolute;
+            left: -3px;
+            top: 150px;
+            width: 6px;
+            height: 10px;
+            background: gray;
+            border-radius: 2px;
+            transition: top 0.5s ease-in-out;
+        }
+
+        /* Minigame Indicator */
+        .minigame-indicator {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .indicator-target {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            background: #00FF00;
+            border-radius: 10px;
+            left: 80px;
+            top: 5px;
+        }
+
+        .indicator-needle {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: red;
+            top: 5px;
+            left: 0;
+        }
+
+        @keyframes needleSweep {
+            0% { left: 0; }
+            50% { left: 180px; }
+            100% { left: 0; }
+        }
+
+        .fish-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 18px;
+            background: linear-gradient(to right, #ff8a00, #e52e71);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .fish-btn:hover:not(:disabled) {
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .fish-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Fish Animation */
+        .fish {
+            position: absolute;
+            font-size: 24px;
+            animation: swim 15s infinite linear;
+        }
+
+        @keyframes swim {
+            0% { left: -50px; }
+            100% { left: calc(100% + 50px); }
+        }
+
+        /* Active Effects */
+        .active-effects {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .effect-item {
+            background: rgba(255, 215, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 15px;
+            border: 1px solid gold;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+            max-width: 150px;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.4);
+            font-weight: bold;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Tab Content */
+        .tab-pane {
+            display: none;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Items Grid */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .item-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .fish-emoji {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .item-rarity {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+        }
+
+        .rarity-basic { background: #87CEEB; color: #000; }
+        .rarity-legendary { background: #FFD700; color: #000; }
+        .rarity-mythical { background: #FF69B4; color: #fff; }
+        .rarity-secret { background: #00FFFF; color: #000; }
+
+        .item-price {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        .item-luck {
+            color: #90EE90;
+            font-size: 0.9rem;
+        }
+
+        .buy-btn {
+            width: 100%;
+            padding: 8px;
+            margin-top: 8px;
+            background: linear-gradient(to right, #00b09b, #96c93d);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .buy-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .buy-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        /* Inventory Controls */
+        .inventory-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .inventory-controls input,
+        .inventory-controls button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .inventory-controls input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Shop Categories */
+        .shop-categories {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .category-btn {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            font-weight: bold;
+        }
+
+        /* Sell Section */
+        .sell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .sell-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .sell-buttons button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+
+        #sell-btn {
+            background: #FF6B6B;
+        }
+
+        #sell-all-btn {
+            background: #4ECDC4;
+        }
+
+        .auto-sell {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .auto-sell label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        /* Gacha Section */
+        .gacha-section {
+            text-align: center;
+        }
+
+        .gacha-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: linear-gradient(45deg, #FF0000, #FF6B35);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .gacha-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .gacha-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .gacha-stats {
+            margin-bottom: 20px;
+        }
+
+        /* Aquarium */
+        .fish-tanks {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .fish-tank {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 200px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .fish-in-tank {
+            display: inline-block;
+            font-size: 2rem;
+            margin: 5px;
+            animation: float 3s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .empty-tank {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            margin-top: 50px;
+        }
+
+        /* Village */
+        .village-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .upgrades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        /* Settings */
+        .settings-section {
+            margin-bottom: 25px;
+        }
+
+        .settings-section h3 {
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+
+        .settings-section label {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .settings-section input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .settings-section button {
+            padding: 10px 15px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .settings-section button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Empty Messages */
+        .empty-message {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            padding: 40px;
+            grid-column: 1 / -1;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
+
+        .close:hover {
+            color: #FFD700;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 8px;
+            z-index: 1001;
+            animation: notificationSlideIn 0.3s ease;
+            backdrop-filter: blur(10px);
+            border-left: 4px solid;
+        }
+
+        .notification.success { border-left-color: #00FF00; }
+        .notification.error { border-left-color: #FF0000; }
+        .notification.info { border-left-color: #00BFFF; }
+
+        @keyframes notificationSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes notificationSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Quest Styles */
+        .quest-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .quest-item.completed {
+            border-left-color: #00FF00;
+        }
+
+        .quest-progress {
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: linear-gradient(to right, #00b09b, #96c93d);
+            transition: width 0.3s ease;
+        }
+
+        /* Gacha Reward Styles */
+        .gacha-reward-item {
+            transition: all 0.3s ease;
+        }
+
+        .gacha-reward-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        /* Luck Display Styles */
+        #luck-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* ==================== FITUR BARU: DIAMOND DISPLAY ==================== */
+        .coins, .diamonds {
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .coins {
+            color: #FFD700;
+            border: 2px solid #FFD700;
+        }
+
+        .diamonds {
+            color: #00FFFF;
+            border: 2px solid #00FFFF;
+            margin-left: 10px;
+        }
+
+        /* ==================== FITUR BARU: ARENA COLOSSEUM ==================== */
+        .arena-container {
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 15px;
+            border: 3px solid #ff00aa;
+        }
+
+        .arena-tier-select, .arena-fish-select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: 2px solid #ff00aa;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .arena-fight-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff0000, #ff00aa);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 15px 0;
+        }
+
+        .arena-fight-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #ff00aa;
+        }
+
+        .arena-fight-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .arena-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #ff00aa;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ff00aa;
+        }
+
+        /* ==================== FITUR BARU: GAMEPASS ==================== */
+        .gamepass-container {
+            background: linear-gradient(135deg, #2a1b3d, #1a1a2e);
+            border-radius: 15px;
+            padding: 20px;
+            border: 3px solid gold;
+        }
+
+        .gamepass-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .gamepass-level {
+            font-size: 2rem;
+            color: gold;
+            font-weight: bold;
+        }
+
+        .gamepass-exp-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            border: 1px solid gold;
+        }
+
+        .gamepass-exp-progress {
+            height: 100%;
+            background: linear-gradient(90deg, gold, orange);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .gamepass-rewards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .free-rewards, .premium-rewards {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .premium-rewards {
+            border-left: 3px solid gold;
+        }
+
+        .gamepass-reward-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+
+        .gamepass-reward-item.claimed {
+            opacity: 0.5;
+            filter: grayscale(0.5);
+        }
+
+        .gamepass-reward-item.locked {
+            opacity: 0.3;
+            filter: blur(1px);
+        }
+
+        .claim-btn {
+            padding: 5px 10px;
+            background: gold;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .claim-btn:hover {
+            background: orange;
+        }
+
+        .buy-gamepass-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, gold, orange);
+            color: black;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+
+        /* ==================== FITUR BARU: DAILY MISSIONS ==================== */
+        .missions-container {
+            display: grid;
+            gap: 15px;
+        }
+
+        .mission-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 5px solid #ff00aa;
+        }
+
+        .mission-item.completed {
+            border-left-color: #00ff00;
+            background: rgba(0,255,0,0.1);
+        }
+
+        .mission-progress {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .mission-progress .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff00aa, #ff66cc);
+            transition: width 0.3s;
+        }
+
+        .mission-reward {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .mission-reward span {
+            background: rgba(0,0,0,0.5);
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+
+        .claim-mission-btn {
+            padding: 8px 15px;
+            background: #00ff00;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .claimed {
+            color: #00ff00;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        /* ==================== FITUR BARU: ACHIEVEMENTS ==================== */
+        .achievements-container {
+            display: grid;
+            gap: 15px;
+        }
+
+        .achievement-item {
+            background: linear-gradient(135deg, #2a1b3d, #1a1a2e);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid gold;
+        }
+
+        .achievement-item.completed {
+            border-color: #00ff00;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .achievement-progress {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .achievement-progress .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, gold, orange);
+            transition: width 0.3s;
+        }
+
+        .achievement-reward {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            color: gold;
+        }
+
+        .claim-achievement-btn {
+            padding: 8px 15px;
+            background: gold;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* ==================== FITUR BARU: DIAMOND SHOP ==================== */
+        .diamond-shop-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .shop-section {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid #00ffff;
+        }
+
+        .shop-section h3 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* ==================== FITUR BARU: REVIVE MODAL ==================== */
+        .revive-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .revive-btn {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(45deg, purple, #ff00aa);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .revive-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .revive-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px purple;
+        }
+
+        /* ==================== FITUR BARU: ARENA RESULT MODAL ==================== */
+        .arena-result {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            min-width: 300px;
+        }
+
+        .arena-result button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .arena-result button:hover {
+            transform: scale(1.05);
+        }
+
+        /* ==================== RESPONSIVE DESIGN ==================== */
+        @media (max-width: 768px) {
+            .gamepass-rewards {
+                grid-template-columns: 1fr;
+            }
+            
+            .arena-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .revive-items {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                max-width: none;
+            }
+            
+            .items-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .fishing-area {
+                height: 250px;
+            }
+            
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .sell-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .auto-sell {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .fish-tanks {
+                grid-template-columns: 1fr;
+            }
+            
+            .inventory-controls {
+                flex-direction: column;
+            }
+            
+            .shop-categories {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span>💰</span>
+                    <span id="coins">500</span>
+                </div>
+                <div class="stat">
+                    <span>💎</span>
+                    <span id="diamonds">0</span>
+                </div>
+                <div class="stat">
+                    <span>⭐</span>
+                    <span id="level">1</span>
+                </div>
+                <div class="stat">
+                    <span>🌟</span>
+                    <span id="prestige">0</span>
+                </div>
+                <div class="stat" id="spot-display">
+                    <span>📍 Danau Biasa</span>
+                </div>
+                <div class="stat" id="weather-display">
+                    <span>☀️ Cerah</span>
+                </div>
+            </div>
+            
+            <div class="spot-buttons" id="spot-buttons">
+                <!-- Spot buttons akan diisi oleh JavaScript -->
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="main-content">
+            <div class="fishing-area">
+                <div class="water" id="fish-display">
+                    <!-- Fish animation akan diisi oleh JavaScript -->
+                </div>
+                <div class="fishing-rod">
+                    <div class="rod"></div>
+                    <div class="fishing-line"></div>
+                    <div class="bobber"></div>
+                    <div class="hook"></div>
+                </div>
+                
+                <!-- Minigame Indicator -->
+                <div class="minigame-indicator" id="minigame-indicator" style="display: none;">
+                    <div class="indicator-target"></div>
+                    <div class="indicator-needle"></div>
+                </div>
+                
+                <button class="fish-btn" id="fish-btn">🎣 Mancing!</button>
+            </div>
+
+            <div class="active-effects" id="active-effects">
+                <!-- Active effects akan ditampilkan di sini -->
+            </div>
+        </main>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="backpack">🎒 Backpack</button>
+            <button class="tab" data-tab="shop">🏪 Shop</button>
+            <button class="tab" data-tab="sell">💰 Sell</button>
+            <button class="tab" data-tab="gacha">🎰 Gacha</button>
+            <button class="tab" data-tab="quests">📜 Quests</button>
+            <button class="tab" data-tab="aquarium">🐠 Aquarium</button>
+            <button class="tab" data-tab="village">🏡 Village</button>
+            <!-- ============ TAB BARU ============ -->
+            <button class="tab" data-tab="colosseum">🏟️ Arena</button>
+            <button class="tab" data-tab="gamepass">🎟️ Gamepass</button>
+            <button class="tab" data-tab="daily-missions">📋 Misi Harian</button>
+            <button class="tab" data-tab="achievements">🏆 Prestasi</button>
+            <button class="tab" data-tab="diamond-shop">💎 Diamond Shop</button>
+            <button class="tab" data-tab="settings">⚙️ Settings</button>
+        </nav>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Backpack Tab -->
+            <div id="backpack" class="tab-pane active">
+                <div class="inventory-controls">
+                    <input type="text" id="search-fish" placeholder="Cari ikan...">
+                    <button id="sort-rarity">Sort Rarity</button>
+                    <button id="sort-price">Sort Harga</button>
+                    <button id="sort-newest">Sort Terbaru</button>
+                </div>
+                <div class="items-grid" id="backpack-items">
+                    <p class="empty-message">Belum ada ikan di backpack</p>
+                </div>
+            </div>
+
+            <!-- Shop Tab -->
+            <div id="shop" class="tab-pane">
+                <div class="shop-categories">
+                    <button class="category-btn active" data-category="rods">🎣 Rods</button>
+                    <button class="category-btn" data-category="baits">🪱 Baits</button>
+                    <button class="category-btn" data-category="potions">🧪 Potions</button>
+                    <button class="category-btn" data-category="upgrades">🏠 Upgrades</button>
+                </div>
+                <div class="items-grid" id="shop-items">
+                    <!-- Shop items akan diisi oleh JavaScript -->
+                </div>
+            </div>
+
+            <!-- Sell Tab -->
+            <div id="sell" class="tab-pane">
+                <div class="sell-header">
+                    <h3>Total: <span id="sell-total">0</span> koin</h3>
+                    <div class="sell-buttons">
+                        <button id="sell-btn" disabled>Jual Selected</button>
+                        <button id="sell-all-btn">Jual Semua</button>
+                    </div>
+                </div>
+                <div class="auto-sell">
+                    <h4>Auto Sell:</h4>
+                    <label><input type="checkbox" id="auto-sell-basic"> Basic</label>
+                    <label><input type="checkbox" id="auto-sell-legendary"> Legendary</label>
+                    <label><input type="checkbox" id="auto-sell-mythical"> Mythical</label>
+                    <label><input type="checkbox" id="auto-sell-secret"> Secret</label>
+                </div>
+                <div class="items-grid" id="sell-items">
+                    <p class="empty-message">Tidak ada ikan untuk dijual</p>
+                </div>
+            </div>
+
+            <!-- Gacha Tab -->
+            <div id="gacha" class="tab-pane">
+                <div class="gacha-section">
+                    <button class="gacha-btn" id="gacha-btn">🎰 Spin Gacha (500 coins)</button>
+                    
+                    <!-- Luck Display -->
+                    <div id="luck-display"></div>
+                    
+                    <div class="gacha-stats">
+                        <p>Total Spins: <span id="total-spins">0</span></p>
+                        <p>Rods Obtained: <span id="rods-obtained">0</span>/<span id="total-rods">5</span></p>
+                    </div>
+                    
+                    <!-- Gacha Rewards List -->
+                    <div style="margin-top: 20px;">
+                        <h4>🎁 Gacha Rewards</h4>
+                        <div id="gacha-rewards">
+                            <!-- Gacha rewards akan diisi oleh JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quests Tab -->
+            <div id="quests" class="tab-pane">
+                <div class="quests-list" id="quests-list">
+                    <!-- Quests akan diisi oleh JavaScript -->
+                </div>
+            </div>
+
+            <!-- Aquarium Tab -->
+            <div id="aquarium" class="tab-pane">
+                <div class="aquarium-stats">
+                    <p>Species Collected: <span id="species-count">0</span>/<span id="total-species">0</span> (<span id="collection-percent">0%</span>)</p>
+                </div>
+                <div class="fish-tanks">
+                    <div class="fish-tank" id="basic-tank">
+                        <h4>Basic Fish</h4>
+                    </div>
+                    <div class="fish-tank" id="legendary-tank">
+                        <h4>Legendary Fish</h4>
+                    </div>
+                    <div class="fish-tank" id="mythical-tank">
+                        <h4>Mythical Fish</h4>
+                    </div>
+                    <div class="fish-tank" id="secret-tank">
+                        <h4>Secret Fish</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Village Tab -->
+            <div id="village" class="tab-pane">
+                <div class="village-stats">
+                    <p>Reputation: <span id="reputation">0</span></p>
+                    <p>Assistants: <span id="assistant-count">0</span>/3</p>
+                    <p>Hut Level: <span id="hut-level">1</span></p>
+                </div>
+                <div class="upgrades-grid" id="village-upgrades">
+                    <!-- Village upgrades akan diisi oleh JavaScript -->
+                </div>
+            </div>
+
+            <!-- ============ TAB BARU: ARENA COLOSSEUM ============ -->
+            <div id="colosseum" class="tab-pane">
+                <div class="arena-container">
+                    <h2>🏟️ ARENA COLOSSEUM</h2>
+                    <p>Adu ikanmu melawan ikan NPC! Resiko tinggi, hadiah tinggi!</p>
+                    
+                    <select id="arena-tier" class="arena-tier-select">
+                        <option value="">Pilih Tier Arena</option>
+                    </select>
+                    
+                    <select id="arena-fish" class="arena-fish-select">
+                        <option value="">Pilih Ikan</option>
+                    </select>
+                    
+                    <button id="arena-fight-btn" class="arena-fight-btn">⚔️ MULAI PERTARUNGAN ⚔️</button>
+                    
+                    <div class="arena-stats">
+                        <div class="stat-card">
+                            <div class="stat-label">Menang</div>
+                            <div class="stat-value" id="arena-wins">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Kalah</div>
+                            <div class="stat-value" id="arena-losses">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Win Streak</div>
+                            <div class="stat-value" id="arena-streak">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Streak Tertinggi</div>
+                            <div class="stat-value" id="arena-highest-streak">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Pendapatan</div>
+                            <div class="stat-value" id="arena-total-earnings">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Fight Hari Ini</div>
+                            <div class="stat-value" id="arena-daily-fights">0/20</div>
+                        </div>
+                    </div>
+                    
+                    <button id="show-graveyard-btn" class="arena-fight-btn" style="background: purple; margin-top: 10px;">💀 Lihat Kuburan Ikan</button>
+                </div>
+            </div>
+
+            <!-- ============ TAB BARU: GAMEPASS ============ -->
+            <div id="gamepass" class="tab-pane">
+                <div class="gamepass-container">
+                    <h2>🎟️ FISHING LEGEND PASS</h2>
+                    
+                    <div class="gamepass-header">
+                        <div>
+                            <span class="gamepass-level">Level <span id="gamepass-level">1</span>/20</span>
+                        </div>
+                        <button id="buy-gamepass-btn" class="buy-gamepass-btn">💎 Beli Premium (500💎)</button>
+                    </div>
+                    
+                    <div class="gamepass-exp-bar">
+                        <div class="gamepass-exp-progress" id="gamepass-progress" style="width: 0%;"></div>
+                    </div>
+                    <div class="gamepass-exp-text" id="gamepass-exp">0 / 100 EXP</div>
+                    
+                    <div class="gamepass-rewards">
+                        <div class="free-rewards">
+                            <h3>🎁 Free Rewards</h3>
+                            <div id="gamepass-free-rewards"></div>
+                        </div>
+                        <div class="premium-rewards">
+                            <h3>💎 Premium Rewards</h3>
+                            <div id="gamepass-premium-rewards"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============ TAB BARU: DAILY MISSIONS ============ -->
+            <div id="daily-missions" class="tab-pane">
+                <div class="missions-container">
+                    <h2>📋 MISI HARIAN</h2>
+                    <p>Reset setiap hari! Dapatkan EXP Gamepass dan Berlian!</p>
+                    <div id="daily-missions-list"></div>
+                </div>
+            </div>
+
+            <!-- ============ TAB BARU: ACHIEVEMENTS ============ -->
+            <div id="achievements" class="tab-pane">
+                <div class="achievements-container">
+                    <h2>🏆 PRESTASI</h2>
+                    <div id="achievements-list"></div>
+                </div>
+            </div>
+
+            <!-- ============ TAB BARU: DIAMOND SHOP ============ -->
+            <div id="diamond-shop" class="tab-pane">
+                <div class="diamond-shop-container">
+                    <h2>💎 DIAMOND SHOP</h2>
+                    <p>Belanja item premium pake berlian!</p>
+                    <div id="diamond-shop-items"></div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-pane">
+                <div class="settings-section">
+                    <h3>Game Settings</h3>
+                    <label><input type="checkbox" id="sound-effects" checked> Sound Effects</label>
+                    <label><input type="checkbox" id="animations" checked> Animations</label>
+                    <label><input type="checkbox" id="notifications" checked> Notifications</label>
+                </div>
+                <div class="settings-section">
+                    <h3>Save Management</h3>
+                    <button id="export-save">Export Save</button>
+                    <button id="import-save">Import Save</button>
+                    <button id="prestige-btn">Prestige</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="result-title">Hasil Mancing</h3>
+            <div id="result-content"></div>
+        </div>
+    </div>
+
+    <div id="gacha-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="gacha-title">Hasil Gacha</h3>
+            <div id="gacha-content"></div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL BARU: ARENA RESULT (FIXED) ============ -->
+    <div id="arena-result-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="arena-result-content"></div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL BARU: REVIVE ============ -->
+    <div id="revive-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>💀 KUBURAN IKAN</h3>
+            <p>Revive ikan matimu dengan berlian!</p>
+            <div id="revive-items" class="revive-items"></div>
+        </div>
+    </div>
+
+    <div id="prestige-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Prestige</h3>
+            <div id="prestige-content"></div>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div id="notification-container"></div>
+
+    <script>
+        // ==================== GAME DATA ====================
+        const gameData = {
+            coins: 500,
+            diamonds: 0,
+            level: 1,
+            currentRod: 0,
+            currentBait: 0,
+            backpack: [],
+            selectedFish: [],
+            totalSellValue: 0,
+            activePotions: [],
+            totalFishCaught: 0,
+            gachaStats: {
+                totalSpins: 0,
+                rodsObtained: []
+            },
+            village: {
+                hutLevel: 1,
+                assistants: 0,
+                lastAssistantFish: 0
+            },
+            settings: {
+                animations: true,
+                notifications: true
+            },
+            aquarium: {
+                basic: {},
+                legendary: {},
+                mythical: {},
+                secret: {}
+            },
+            colosseum: {
+                wins: 0,
+                losses: 0,
+                winStreak: 0,
+                highestStreak: 0,
+                totalEarnings: 0,
+                lastFightTime: 0,
+                dailyFights: 0,
+                fishGraveyard: [],
+                titles: []
+            },
+            gamepass: {
+                active: false,
+                premium: false,
+                level: 1,
+                exp: 0,
+                claimedRewards: [],
+                expiryDate: null,
+                season: "season1",
+                dailyExp: 0,
+                lastExpReset: Date.now()
+            },
+            dailyMissions: {
+                date: new Date().toDateString(),
+                completed: [],
+                claimed: []
+            },
+            diamondShop: {
+                reviveScrolls: {
+                    basic: 0,
+                    legendary: 0,
+                    mythical: 0,
+                    secret: 0,
+                    divine: 0
+                },
+                boosters: {}
+            }
+        };
+
+        // ==================== FISHING SPOTS ====================
+        const fishingSpots = [
+            {
+                id: 0,
+                name: "Danau Biasa",
+                background: "linear-gradient(135deg, #87CEEB, #1E90FF)",
+                color: "#1E90FF",
+                fishes: [
+                    { id: 0, name: "Ikan Mas", rarity: "basic", chance: 25, price: 10, emoji: "🐟" },
+                    { id: 1, name: "Ikan Lele", rarity: "basic", chance: 20, price: 8, emoji: "🐠" },
+                    { id: 2, name: "Ikan Nila", rarity: "basic", chance: 15, price: 12, emoji: "🐡" },
+                    { id: 3, name: "Ikan Guppy", rarity: "basic", chance: 10, price: 6, emoji: "🐠" },
+                    { id: 4, name: "Ikan Hiu", rarity: "legendary", chance: 8, price: 50, emoji: "🦈" },
+                    { id: 5, name: "Ikan Pari", rarity: "legendary", chance: 7, price: 45, emoji: "🐠" },
+                    { id: 6, name: "Ikan Todak", rarity: "legendary", chance: 5, price: 55, emoji: "🐟" },
+                    { id: 7, name: "Ikan Salmon", rarity: "legendary", chance: 5, price: 60, emoji: "🐠" },
+                    { id: 8, name: "Ikan Naga", rarity: "mythical", chance: 2, price: 150, emoji: "🐉" },
+                    { id: 9, name: "Ikan Phoenix", rarity: "mythical", chance: 1.5, price: 180, emoji: "🐦‍🔥" },
+                    { id: 10, name: "Ikan Unicorn", rarity: "mythical", chance: 0.5, price: 200, emoji: "🦄" },
+                    { id: 11, name: "Ikan Legenda", rarity: "secret", chance: 0.1, price: 1000, emoji: "🌟", spot: "danau" },
+                    { id: 12, name: "Ikan Kosmik", rarity: "secret", chance: 0.05, price: 2500, emoji: "🌌", spot: "danau" }
+                ]
+            },
+            {
+                id: 1, 
+                name: "Kuil Suci",
+                background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
+                color: "#4B0082",
+                fishes: [
+                    { id: 100, name: "Ikan Suci", rarity: "basic", chance: 20, price: 15, emoji: "🐟" },
+                    { id: 101, name: "Ikan Monk", rarity: "basic", chance: 18, price: 12, emoji: "🐠" },
+                    { id: 102, name: "Ikan Bless", rarity: "basic", chance: 12, price: 18, emoji: "🐡" },
+                    { id: 103, name: "Ikan Zen", rarity: "basic", chance: 10, price: 14, emoji: "🐠" },
+                    { id: 104, name: "Ikan Divine", rarity: "legendary", chance: 10, price: 80, emoji: "✨" },
+                    { id: 105, name: "Ikan Angel", rarity: "legendary", chance: 8, price: 95, emoji: "🪽" },
+                    { id: 106, name: "Ikan Temple", rarity: "legendary", chance: 7, price: 110, emoji: "⛰️" },
+                    { id: 107, name: "Ikan Spirit", rarity: "legendary", chance: 5, price: 120, emoji: "👻" },
+                    { id: 108, name: "Ikan Deva", rarity: "mythical", chance: 4, price: 300, emoji: "💥" },
+                    { id: 109, name: "Ikan Buddha", rarity: "mythical", chance: 3, price: 450, emoji: "🦚" },
+                    { id: 110, name: "Ikan Nirvana", rarity: "mythical", chance: 1, price: 600, emoji: "🪷" },
+                    { id: 111, name: "Rahata Turtle", rarity: "secret", chance: 0.1, price: 2500, emoji: "🐢", spot: "kuil" },
+                    { id: 112, name: "Mbah To Fish", rarity: "secret", chance: 0.05, price: 5000, emoji: "🫎", spot: "kuil" },
+                    { id: 113, name: "Raji Fish", rarity: "secret", chance: 0.01, price: 10000, emoji: "🪼", spot: "kuil" }
+                ]
+            },
+            {
+                id: 2,
+                name: "Laut Dalam", 
+                background: "linear-gradient(135deg, #00008B, #000080, #191970)",
+                color: "#000080",
+                fishes: [
+                    { id: 200, name: "Ikan Teri", rarity: "basic", chance: 15, price: 20, emoji: "🐟" },
+                    { id: 201, name: "Ikan Tuna", rarity: "basic", chance: 15, price: 25, emoji: "🐠" },
+                    { id: 202, name: "Ikan Tongkol", rarity: "basic", chance: 10, price: 30, emoji: "🐡" },
+                    { id: 203, name: "Ikan Sarden", rarity: "basic", chance: 10, price: 18, emoji: "🐠" },
+                    { id: 204, name: "Ikan Paus", rarity: "legendary", chance: 10, price: 200, emoji: "🐋" },
+                    { id: 205, name: "Ikan Gurita", rarity: "legendary", chance: 9, price: 180, emoji: "🦑" },
+                    { id: 206, name: "Ikan Lumba", rarity: "legendary", chance: 8, price: 220, emoji: "🐬" },
+                    { id: 207, name: "Ikan Hiu Martil", rarity: "legendary", chance: 5, price: 250, emoji: "🦈" },
+                    { id: 208, name: "Ikan Naga Laut", rarity: "mythical", chance: 6, price: 800, emoji: "🦎" },
+                    { id: 209, name: "Ikan Poseidon", rarity: "mythical", chance: 4, price: 1200, emoji: "🔱" },
+                    { id: 210, name: "Ikan Siren", rarity: "mythical", chance: 2, price: 1500, emoji: "🧜‍♀️" },
+                    { id: 211, name: "Kraken Raksasa", rarity: "secret", chance: 0.1, price: 8000, emoji: "🐙", spot: "laut" },
+                    { id: 212, name: "Leviathan", rarity: "secret", chance: 0.05, price: 20000, emoji: "🐍", spot: "laut" },
+                    { id: 213, name: "Cthulhu", rarity: "secret", chance: 0.001, price: 50000, emoji: "👹", spot: "laut" }
+                ]
+            },
+            {
+                id: 3,
+                name: "Sungai Emas",
+                background: "linear-gradient(135deg, #FFD700, #FFA500, #FF8C00)",
+                color: "#FFD700", 
+                fishes: [
+                    { id: 300, name: "Ikan Koi", rarity: "basic", chance: 15, price: 30, emoji: "🐟" },
+                    { id: 301, name: "Ikan Komet", rarity: "basic", chance: 12, price: 25, emoji: "🐠" },
+                    { id: 302, name: "Ikan Mas Koki", rarity: "basic", chance: 8, price: 35, emoji: "🐡" },
+                    { id: 303, name: "Ikan Kaca", rarity: "basic", chance: 5, price: 28, emoji: "🐠" },
+                    { id: 304, name: "Ikan Dragon", rarity: "legendary", chance: 10, price: 300, emoji: "🐲" },
+                    { id: 305, name: "Ikan Phoenix Gold", rarity: "legendary", chance: 9, price: 350, emoji: "🔥" },
+                    { id: 306, name: "Ikan Unicorn Gold", rarity: "legendary", chance: 8, price: 400, emoji: "🦄" },
+                    { id: 307, name: "Ikan Titan", rarity: "legendary", chance: 5, price: 450, emoji: "⚡" },
+                    { id: 308, name: "Ikan Emperor", rarity: "mythical", chance: 5, price: 1200, emoji: "🦂" },
+                    { id: 309, name: "Ikan Celestial", rarity: "mythical", chance: 4, price: 1800, emoji: "⭐" },
+                    { id: 310, name: "Ikan Eternal", rarity: "mythical", chance: 2, price: 2500, emoji: "💎" },
+                    { id: 311, name: "Golden Leviathan", rarity: "secret", chance: 0.05, price: 10000, emoji: "🐉", spot: "sungai" },
+                    { id: 312, name: "Sun Fish", rarity: "secret", chance: 0.01, price: 15000, emoji: "☀️", spot: "sungai" },
+                    { id: 313, name: "Moster Locness", rarity: "secret", chance: 0.005, price: 50000, emoji: "🦕", spot: "sungai" }
+                ]
+            },
+            {
+                id: 4,
+                name: "Luar Angkasa",
+                background: "linear-gradient(135deg, #000033, #000066, #19003a, #330066)",
+                color: "#6600cc",
+                fishes: [
+                    { id: 400, name: "Bintang Jatuh", rarity: "basic", chance: 18, price: 60, emoji: "⭐" },
+                    { id: 401, name: "Komet Kecil", rarity: "basic", chance: 15, price: 55, emoji: "☄️" },
+                    { id: 402, name: "Debu Kosmik", rarity: "basic", chance: 12, price: 50, emoji: "✨" },
+                    { id: 403, name: "Alien Fish", rarity: "legendary", chance: 5, price: 800, emoji: "👽" },
+                    { id: 404, name: "Blob Fish", rarity: "legendary", chance: 5, price: 750, emoji: "🐷" },
+                    { id: 405, name: "Ikan UFO", rarity: "mythical", chance: 0.5, price: 1000, emoji: "🛸" },
+                    { id: 406, name: "Ikan Gileg", rarity: "mythical", chance: 0.1, price: 2000, emoji: "🌠" },
+                    { id: 407, name: "404 Fish", rarity: "secret", chance: 0.001, price: 50000, emoji: "🦠", spot: "angkasa" },
+                    { id: 408, name: "1x1x1 Fish", rarity: "secret", chance: 0.0009, price: 100000, emoji: "💠", spot: "angkasa" },
+                    { id: 409, name: "Elshark gran maja", rarity: "???", chance: 0.0001, price: 1000000, emoji: "🎃", spot: "angkasa" }
+                ]
+            }
+        ];
+
+        // ==================== EQUIPMENT DATA ====================
+        const rods = [
+            { id: 0, name: "Pancingan Bambu", luck: 1, price: 0, owned: true },
+            { id: 1, name: "Pancingan Besi", luck: 2, price: 350, owned: false },
+            { id: 2, name: "Pancingan Emas", luck: 5, price: 700, owned: false },
+            { id: 3, name: "Pancingan Platinum", luck: 10, price: 1000, owned: false },
+            { id: 4, name: "Pancingan Legendaris", luck: 20, price: 3000, owned: false },
+            { id: 5, name: "Pancingan Dragon", luck: 40, price: 6000, owned: false },
+            { id: 6, name: "Pancingan Cosmic", luck: 80, price: 10000, owned: false },
+            { id: 7, name: "Element Rod", luck: 120, price: 0, owned: false, unlocked: false, special: true },
+            { id: 8, name: "Trident Rod", luck: 200, price: 0, owned: false, unlocked: false, special: true },
+            { id: 9, name: "Galaxy Sword Rod", luck: 404, price: 440044, owned: false },
+            { id: 10, name: "Tyo Rod", luck: 999, price: 999999, owned: false },
+            { id: 11, name: "1x1x1 Rod", luck: 1111, price: 0, owned: false, unlocked: false, special: true, emoji: "🪬" }
+        ];
+
+        const baits = [
+            { id: 0, name: "Umpan Biasa", luck: 1, price: 0, owned: true },
+            { id: 1, name: "Umpan Cacing", luck: 1.5, price: 200, owned: false },
+            { id: 2, name: "Umpan Udang", luck: 2, price: 300, owned: false },
+            { id: 3, name: "Umpan Ikan Kecil", luck: 5, price: 600, owned: false },
+            { id: 4, name: "Umpan Ajaib", luck: 7, price: 700, owned: false },
+            { id: 5, name: "Umpan Emas", luck: 15, price: 1500, owned: false },
+            { id: 6, name: "Umpan Dark Matter", luck: 111, price: 22222, owned: false },
+            { id: 7, name: "Umpan Singularity", luck: 125, price: 30000, owned: false },
+            { id: 8, name: "Elshark Bait", luck: 150, price: 50000, owned: false }
+        ];
+
+        const potions = [
+            { id: 0, name: "Luck Potion x2", multiplier: 2, duration: 10, price: 400, emoji: "🧪" },
+            { id: 1, name: "Luck Potion x3", multiplier: 3, duration: 8, price: 600, emoji: "🔮" },
+            { id: 2, name: "Luck Potion x5", multiplier: 5, duration: 5, price: 1000, emoji: "💎" },
+            { id: 3, name: "Luck Potion x10", multiplier: 10, duration: 3, price: 2000, emoji: "✨" },
+            { id: 4, name: "Super Luck Potion x100", multiplier: 100, duration: 1, price: 20000, emoji: "🍺" }
+        ];
+
+        const gachaRods = [
+            { id: 100, name: "Wooden Enchant", luck: 1.2, rarity: "common", chance: 60, emoji: "🎣" },
+            { id: 101, name: "Silver Enchant", luck: 2.0, rarity: "rare", chance: 25, emoji: "🥈" },
+            { id: 102, name: "Dragon Enchant", luck: 4.0, rarity: "epic", chance: 10, emoji: "🐲" },
+            { id: 103, name: "Legendary Enchant", luck: 8.0, rarity: "legendary", chance: 4, emoji: "⚡" },
+            { id: 104, name: "Mythic Enchant", luck: 15.0, rarity: "mythical", chance: 1, emoji: "🌟" }
+        ];
+
+        // ==================== QUEST SYSTEM ====================
+        const quests = [
+            { 
+                id: 1, 
+                name: "Element Rod Quest", 
+                desc: "Tangkap 2 ikan Secret di Kuil Suci", 
+                target: 2, 
+                progress: 0, 
+                completed: false,
+                reward: "Element Rod",
+                type: "secret_kuil"
+            },
+            { 
+                id: 2, 
+                name: "Trident Rod Quest", 
+                desc: "Tangkap 1 Secret di semua spot (Danau, Kuil, Laut, Sungai)", 
+                target: 4, 
+                progress: 0, 
+                completed: false,
+                reward: "Trident Rod",
+                type: "secret_all_spots"
+            },
+            { 
+                id: 3, 
+                name: "1x1x1 Rod Quest", 
+                desc: "Tangkap 5 ikan Secret di Luar Angkasa", 
+                target: 5, 
+                progress: 0, 
+                completed: false,
+                reward: "1x1x1 Rod",
+                type: "secret_angkasa"
+            }
+        ];
+
+        // ==================== GAME SYSTEMS ====================
+        const weather = {
+            current: "sunny",
+            effects: {
+                sunny: { luck: 1.0, text: "Cerah ☀️", color: "#FFD700" },
+                rainy: { luck: 1.3, text: "Hujan 🌧️", color: "#4682B4" },
+                stormy: { luck: 2, text: "Badai ⚡", color: "#4B0082" }
+            }
+        };
+
+        let currentSpot = 0;
+        let isFishing = false;
+        let currentPullHandler = null;
+        let autoSellSettings = {
+            basic: false,
+            legendary: false
+        };
+        let caughtSecretSpots = {
+            danau: false,
+            kuil: false,
+            laut: false,
+            sungai: false,
+            angkasa: false
+        };
+
+        // ==================== FITUR BARU: ARENA CONSTANTS ====================
+        const colosseumTiers = [
+            {
+                id: 1,
+                name: "Kolam Pemula",
+                entryFee: 100,
+                minRarity: "basic",
+                rewardMultiplier: 1.5,
+                diamondReward: { min: 5, max: 10 },
+                background: "linear-gradient(135deg, #87CEEB, #1E90FF)",
+                unlockRequirement: null
+            },
+            {
+                id: 2,
+                name: "Sungai Petarung",
+                entryFee: 500,
+                minRarity: "legendary",
+                rewardMultiplier: 2.5,
+                diamondReward: { min: 15, max: 25 },
+                background: "linear-gradient(135deg, #FFD700, #FFA500)",
+                unlockRequirement: { wins: 10 }
+            },
+            {
+                id: 3,
+                name: "Lautan Berdarah",
+                entryFee: 2000,
+                minRarity: "mythical",
+                rewardMultiplier: 5,
+                diamondReward: { min: 30, max: 50 },
+                background: "linear-gradient(135deg, #8B0000, #FF0000)",
+                unlockRequirement: { wins: 25 }
+            },
+            {
+                id: 4,
+                name: "Dimensi Dewa",
+                entryFee: 10000,
+                minRarity: "secret",
+                rewardMultiplier: 10,
+                diamondReward: { min: 60, max: 100 },
+                background: "linear-gradient(135deg, #4B0082, #9400D3)",
+                unlockRequirement: { wins: 50, secretFish: 5 }
+            },
+            {
+                id: 5,
+                name: "Akhirat Colosseum",
+                entryFee: 50000,
+                minRarity: "divine",
+                rewardMultiplier: 25,
+                diamondReward: { min: 100, max: 200 },
+                background: "linear-gradient(135deg, #000000, #434343)",
+                unlockRequirement: { winStreak: 10 }
+            }
+        ];
+
+        const npcFighters = [
+            { id: "npc1", name: "Si Gembul", tier: 1, fish: { id: 9991, name: "Lele Buntung", rarity: "basic", price: 50, emoji: "🐟", hp: 100, attack: 12, defense: 8, speed: 10, skills: ["Tackle", "Splash"] } },
+            { id: "npc2", name: "Master Koi", tier: 1, fish: { id: 9992, name: "Koi Sakti", rarity: "legendary", price: 350, emoji: "🐠", hp: 250, attack: 28, defense: 20, speed: 18, skills: ["Water Gun", "Tail Slap"] } },
+            { id: "npc3", name: "Raja Laut", tier: 2, fish: { id: 9993, name: "Hiu Martil Veteran", rarity: "legendary", price: 800, emoji: "🦈", hp: 500, attack: 65, defense: 40, speed: 35, skills: ["Jaw Lock", "Blood Sense"] } },
+            { id: "npc4", name: "Naga Air", tier: 2, fish: { id: 9994, name: "Dragon Fish", rarity: "mythical", price: 1500, emoji: "🐉", hp: 850, attack: 95, defense: 70, speed: 50, skills: ["Dragon Breath", "Tsunami"] } },
+            { id: "npc5", name: "Kraken Muda", tier: 3, fish: { id: 9995, name: "Baby Kraken", rarity: "mythical", price: 3200, emoji: "🐙", hp: 1500, attack: 140, defense: 120, speed: 40, skills: ["Tentacle Grab", "Ink Cloud"] } },
+            { id: "npc6", name: "Penjaga Kuil", tier: 3, fish: { id: 9996, name: "Rahata Turtle Elder", rarity: "secret", price: 8000, emoji: "🐢", hp: 3000, attack: 90, defense: 350, speed: 10, skills: ["Shell Shield", "Ancient Power"] } },
+            { id: "npc7", name: "Utusan Kegelapan", tier: 4, fish: { id: 9997, name: "Cthulhu Spawn", rarity: "secret", price: 25000, emoji: "👹", hp: 5000, attack: 400, defense: 300, speed: 60, skills: ["Mind Blast", "Tentacle Crush"] } },
+            { id: "npc8", name: "Phoenix Abadi", tier: 4, fish: { id: 9998, name: "Phoenix Fish", rarity: "secret", price: 40000, emoji: "🐦‍🔥", hp: 4500, attack: 350, defense: 250, speed: 120, skills: ["Rebirth", "Flame Breath"] } },
+            { id: "npc9", name: "Dewa Kematian", tier: 5, fish: { id: 9999, name: "Reaper Fish", rarity: "divine", price: 100000, emoji: "💀", hp: 10000, attack: 800, defense: 600, speed: 80, skills: ["Soul Steal", "Death Sentence"] } },
+            { id: "npc10", name: "Origin", tier: 5, fish: { id: 10000, name: "Origin Fish", rarity: "divine", price: 500000, emoji: "🌌", hp: 20000, attack: 1500, defense: 1000, speed: 200, skills: ["Reality Break", "Creation"] } }
+        ];
+
+        const reviveCosts = { basic: 5, legendary: 15, mythical: 40, secret: 100, divine: 250 };
+
+        const reviveScrolls = [
+            { id: "revive_basic", name: "Revive Scroll (Basic)", rarity: "basic", price: 5, emoji: "📜" },
+            { id: "revive_legendary", name: "Revive Scroll (Legendary)", rarity: "legendary", price: 15, emoji: "📜✨" },
+            { id: "revive_mythical", name: "Revive Scroll (Mythical)", rarity: "mythical", price: 40, emoji: "📜🔥" },
+            { id: "revive_secret", name: "Revive Scroll (Secret)", rarity: "secret", price: 100, emoji: "📜💎" },
+            { id: "revive_divine", name: "Revive Scroll (Divine)", rarity: "divine", price: 250, emoji: "📜👑" }
+        ];
+
+        const gamepassLevels = [
+            { level: 1, free: { coins: 100 }, premium: { bait: "Umpan Ajaib", diamonds: 5 } },
+            { level: 2, free: { bait: "Umpan Cacing x3" }, premium: { diamonds: 5 } },
+            { level: 3, free: { coins: 200 }, premium: { rod: "Pancingan Besi" } },
+            { level: 4, free: { potion: "Luck Potion x2" }, premium: { diamonds: 10 } },
+            { level: 5, free: { fish: "legendary" }, premium: { fish: "legendary", rod: "Pancingan Emas" } },
+            { level: 6, free: { coins: 300 }, premium: { diamonds: 15 } },
+            { level: 7, free: { bait: "Umpan Udang x2" }, premium: { bait: "Umpan Emas" } },
+            { level: 8, free: { coins: 400 }, premium: { diamonds: 20 } },
+            { level: 9, free: { potion: "Luck Potion x3" }, premium: { potion: "Luck Potion x5" } },
+            { level: 10, free: { fish: "mythical" }, premium: { fish: "mythical", rod: "Pancingan Platinum" } },
+            { level: 11, free: { coins: 500 }, premium: { diamonds: 25 } },
+            { level: 12, free: { bait: "Umpan Ikan Kecil x2" }, premium: { bait: "Umpan Dark Matter" } },
+            { level: 13, free: { coins: 600 }, premium: { diamonds: 30 } },
+            { level: 14, free: { potion: "Luck Potion x5" }, premium: { potion: "Luck Potion x10" } },
+            { level: 15, free: { fish: "secret" }, premium: { fish: "secret", rod: "Pancingan Dragon" } },
+            { level: 16, free: { coins: 700 }, premium: { diamonds: 40 } },
+            { level: 17, free: { bait: "Umpan Emas x1" }, premium: { bait: "Umpan Singularity" } },
+            { level: 18, free: { coins: 800 }, premium: { diamonds: 50 } },
+            { level: 19, free: { potion: "Luck Potion x10" }, premium: { potion: "Super Luck x100" } },
+            { level: 20, free: { fish: "secret", diamonds: 100 }, premium: { fish: "secret", rod: "Galaxy Sword Rod", diamonds: 500 } }
+        ];
+
+        const gamepassExpRequirements = {
+            1: 0, 2: 100, 3: 250, 4: 450, 5: 700, 6: 1000, 7: 1350, 8: 1750, 9: 2200, 10: 2700,
+            11: 3250, 12: 3850, 13: 4500, 14: 5200, 15: 5950, 16: 6750, 17: 7600, 18: 8500, 19: 9450, 20: 10500
+        };
+
+        const dailyMissions = [
+            { id: "dm1", name: "Nelayan Rajin", desc: "Mancing 10x", target: 10, progress: 0, completed: false, reward: { exp: 50, coins: 200, diamonds: 2 } },
+            { id: "dm2", name: "Pemburu Ikan Langka", desc: "Dapat 3 ikan legendary", target: 3, progress: 0, completed: false, reward: { exp: 100, coins: 500, diamonds: 5 } },
+            { id: "dm3", name: "Gladiator", desc: "Menang 3x di arena", target: 3, progress: 0, completed: false, reward: { exp: 150, coins: 300, diamonds: 8 } },
+            { id: "dm4", name: "Sempurna!", desc: "Perfect catch 2x", target: 2, progress: 0, completed: false, reward: { exp: 80, coins: 250, diamonds: 3 } },
+            { id: "dm5", name: "Kolektor", desc: "Dapat 5 jenis ikan berbeda", target: 5, progress: 0, completed: false, reward: { exp: 120, coins: 400, diamonds: 6 } }
+        ];
+
+        const achievements = [
+            { id: "ach1", name: "Diamond Hands", desc: "Kumpulkan 1000 berlian", target: 1000, progress: 0, completed: false, claimed: false, reward: { diamonds: 100, title: "Diamond Lord" } },
+            { id: "ach2", name: "Savior", desc: "Revive 50 ikan", target: 50, progress: 0, completed: false, claimed: false, reward: { diamonds: 500, title: "The Savior" } },
+            { id: "ach3", name: "Battle Hardened", desc: "Menang 100x di arena", target: 100, progress: 0, completed: false, claimed: false, reward: { diamonds: 500 } }
+        ];
+
+        const diamondShopItems = [
+            { id: "instant_perfect", name: "Instant Perfect Ticket", price: 20, emoji: "🎫", description: "Auto perfect catch next fish", type: "consumable" },
+            { id: "arena_skip", name: "Arena Skip Ticket", price: 10, emoji: "⏭️", description: "Skip cooldown arena", type: "consumable" },
+            { id: "exp_booster", name: "Double EXP Booster", price: 50, emoji: "⚡", description: "2x EXP gamepass (24 jam)", type: "booster" },
+            { id: "luck_booster", name: "Luck Booster", price: 75, emoji: "🍀", description: "+50% luck (1 jam)", type: "booster" },
+            { id: "mystery_box", name: "Mystery Box Premium", price: 100, emoji: "🎁", description: "Dapat item random", type: "box" }
+        ];
+
+        const skins = [
+            { id: "golden_rod", name: "Golden Rod Skin", price: 50, emoji: "✨", bonus: "+5% luck", type: "rod" },
+            { id: "dark_aquarium", name: "Dark Mode Aquarium", price: 30, emoji: "🌑", bonus: "Visual only", type: "aquarium" }
+        ];
+
+        // ==================== DOM ELEMENTS ====================
+        let coinsElement, diamondsElement, levelElement, fishBtn, gachaBtn;
+        let backpackItems, shopItems, sellItems, sellTotal, sellBtn, sellAllBtn;
+        let resultModal, gachaModal, arenaResultModal, reviveModal;
+        let resultTitle, resultContent, gachaTitle, gachaContent;
+        let minigameIndicator;
+        let arenaTierSelect, arenaFishSelect, arenaFightBtn, showGraveyardBtn, buyGamepassBtn;
+        let gamepassProgressBar, gamepassLevelDisplay, gamepassExpDisplay;
+        let gamepassFreeRewards, gamepassPremiumRewards;
+        let reviveItemsContainer, diamondShopItemsContainer;
+
+        // ==================== HELPER FUNCTIONS ====================
+        function getAllFishes() {
+            return fishingSpots.flatMap(spot => spot.fishes);
+        }
+
+        function getRandomFishByRarity(rarity) {
+            const allFishes = getAllFishes();
+            const fishesOfRarity = allFishes.filter(f => f.rarity === rarity);
+            if (fishesOfRarity.length === 0) return null;
+            return fishesOfRarity[Math.floor(Math.random() * fishesOfRarity.length)];
+        }
+
+        function getRandomFish() {
+            const currentSpotData = fishingSpots[currentSpot];
+            const random = Math.random() * 100;
+            let cumulative = 0;
+            for (const fish of currentSpotData.fishes) {
+                cumulative += fish.chance;
+                if (random <= cumulative) return { ...fish };
+            }
+            return { ...currentSpotData.fishes[0] };
+        }
+
+        // Improved notification system - tidak pakai alert
+        function showNotification(msg, type = "info") {
+            console.log(`[${type}] ${msg}`);
+            
+            // Coba gunakan container notification jika ada
+            const container = document.getElementById('notification-container');
+            if (container) {
+                const notif = document.createElement('div');
+                notif.className = `notification ${type}`;
+                notif.textContent = msg;
+                container.appendChild(notif);
+                
+                setTimeout(() => {
+                    notif.style.animation = 'notificationSlideOut 0.3s ease';
+                    setTimeout(() => notif.remove(), 300);
+                }, 3000);
+            } else {
+                // Fallback ke alert hanya jika benar-benar tidak ada container
+                // Tapi kita hindari alert karena memblokir
+                // alert(`[${type}] ${msg}`);
+            }
+        }
+
+        function updateUI() {
+            if (coinsElement) coinsElement.textContent = gameData.coins;
+            if (diamondsElement) diamondsElement.textContent = gameData.diamonds;
+            if (levelElement) levelElement.textContent = gameData.level;
+        }
+
+        function saveGame() {
+            localStorage.setItem('fishSave', JSON.stringify(gameData));
+        }
+
+        function loadGame() {
+            const save = localStorage.getItem('fishSave');
+            if (save) {
+                try {
+                    Object.assign(gameData, JSON.parse(save));
+                } catch (e) {
+                    console.error('Error loading save:', e);
+                }
+            }
+        }
+
+        function addToAquarium(fish) {
+            const rarity = fish.rarity;
+            if (!gameData.aquarium[rarity]) gameData.aquarium[rarity] = {};
+            if (!gameData.aquarium[rarity][fish.id]) gameData.aquarium[rarity][fish.id] = 0;
+            gameData.aquarium[rarity][fish.id]++;
+        }
+
+        function updateQuestProgress(fish) {
+            if (fish.rarity === "secret") {
+                if (fish.spot === "kuil") {
+                    const quest = quests.find(q => q.id === 1);
+                    if (quest && !quest.completed) {
+                        quest.progress++;
+                        if (quest.progress >= quest.target) {
+                            quest.completed = true;
+                            showNotification(`✅ Quest ${quest.name} selesai!`);
+                        }
+                    }
+                }
+            }
+        }
+
+        function addGamepassExp(amount) {
+            if (!gameData.gamepass.active) return;
+            gameData.gamepass.exp += amount;
+            while (gameData.gamepass.level < 20 && 
+                   gameData.gamepass.exp >= gamepassExpRequirements[gameData.gamepass.level + 1]) {
+                gameData.gamepass.level++;
+                showNotification(`🎉 Gamepass Level ${gameData.gamepass.level}!`);
+            }
+        }
+
+        function updateMissionProgress(id, amount) {
+            const mission = dailyMissions.find(m => m.id === id);
+            if (!mission || mission.completed) return;
+            mission.progress += amount;
+            if (mission.progress >= mission.target) {
+                mission.completed = true;
+                showNotification(`✅ Misi ${mission.name} selesai!`);
+            }
+        }
+
+        function checkAchievements() {
+            const ach = achievements.find(a => a.id === "ach1");
+            if (ach) {
+                ach.progress = Math.min(gameData.diamonds, ach.target);
+                if (ach.progress >= ach.target && !ach.completed) {
+                    ach.completed = true;
+                    showNotification(`🏆 Achievement ${ach.name} selesai!`);
+                }
+            }
+        }
+
+        // ==================== MAIN FISHING FUNCTION ====================
+        function startFishing() {
+            if (isFishing) return;
+            isFishing = true;
+            
+            const fish = getRandomFish();
+            
+            gameData.backpack.push({
+                ...fish,
+                catchTime: Date.now(),
+                perfectCatch: false
+            });
+            
+            gameData.totalFishCaught++;
+            
+            showNotification(`🎣 Dapat ${fish.name} (${fish.price} koin)!`);
+            
+            addToAquarium(fish);
+            updateQuestProgress(fish);
+            addGamepassExp(5);
+            updateMissionProgress('dm1', 1);
+            if (fish.rarity === 'legendary') updateMissionProgress('dm2', 1);
+            
+            updateUI();
+            loadBackpack();
+            loadSellItems();
+            loadArenaFish(); // Refresh arena fish selection
+            isFishing = false;
+        }
+
+        // ==================== BACKPACK FUNCTIONS ====================
+        function loadBackpack() {
+            const container = document.getElementById('backpack-items');
+            if (!container) return;
+            
+            if (gameData.backpack.length === 0) {
+                container.innerHTML = '<p class="empty-message">Belum ada ikan</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            gameData.backpack.forEach((fish, i) => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="fish-emoji">${fish.emoji}</div>
+                    <div class="item-name">${fish.name}</div>
+                    <div class="item-rarity rarity-${fish.rarity}">${fish.rarity}</div>
+                    <div class="item-price">💰 ${fish.price}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ==================== SHOP FUNCTIONS ====================
+        function loadShop(category = 'rods') {
+            const container = document.getElementById('shop-items');
+            if (!container) return;
+            
+            let items = [];
+            switch(category) {
+                case 'rods':
+                    items = rods.filter(r => !r.owned);
+                    break;
+                case 'baits':
+                    items = baits.filter(b => !b.owned);
+                    break;
+                case 'potions':
+                    items = potions;
+                    break;
+                default:
+                    items = [];
+            }
+            
+            if (items.length === 0) {
+                container.innerHTML = '<p class="empty-message">Tidak ada item tersedia</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-name">${item.emoji || '🎣'} ${item.name}</div>
+                    <div class="item-price">💰 ${item.price}</div>
+                    <button class="buy-btn" onclick="buyItem('${category}', ${item.id})">Beli</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Global function untuk beli item
+        window.buyItem = function(category, id) {
+            let item = null;
+            let price = 0;
+            
+            if (category === 'rods') {
+                item = rods.find(r => r.id === id);
+                if (item) price = item.price;
+            } else if (category === 'baits') {
+                item = baits.find(b => b.id === id);
+                if (item) price = item.price;
+            } else if (category === 'potions') {
+                item = potions.find(p => p.id === id);
+                if (item) price = item.price;
+            }
+            
+            if (!item) {
+                showNotification('❌ Item tidak ditemukan', 'error');
+                return;
+            }
+            
+            if (gameData.coins < price) {
+                showNotification('❌ Koin tidak cukup', 'error');
+                return;
+            }
+            
+            gameData.coins -= price;
+            item.owned = true;
+            
+            showNotification(`✅ Berhasil membeli ${item.name}!`, 'success');
+            updateUI();
+            loadShop(category);
+        };
+
+        // ==================== SELL FUNCTIONS ====================
+        function loadSellItems() {
+            const container = document.getElementById('sell-items');
+            if (!container) return;
+            
+            if (gameData.backpack.length === 0) {
+                container.innerHTML = '<p class="empty-message">Tidak ada ikan</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            gameData.backpack.forEach((fish, i) => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="fish-emoji">${fish.emoji}</div>
+                    <div class="item-name">${fish.name}</div>
+                    <div class="item-rarity rarity-${fish.rarity}">${fish.rarity}</div>
+                    <div class="item-price">💰 ${fish.price}</div>
+                    <button class="buy-btn" onclick="sellFish(${i})" style="background: #FF6B6B;">Jual</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Global function untuk jual ikan
+        window.sellFish = function(index) {
+            if (index < 0 || index >= gameData.backpack.length) return;
+            
+            const fish = gameData.backpack[index];
+            gameData.coins += fish.price;
+            gameData.backpack.splice(index, 1);
+            updateUI();
+            loadBackpack();
+            loadSellItems();
+            loadArenaFish(); // Refresh arena fish selection
+            showNotification(`💰 Terjual ${fish.name} (${fish.price} koin)`, 'success');
+        };
+
+        function sellAllFish() {
+            if (gameData.backpack.length === 0) {
+                showNotification('❌ Tidak ada ikan untuk dijual', 'error');
+                return;
+            }
+            
+            let total = 0;
+            gameData.backpack.forEach(f => total += f.price);
+            gameData.coins += total;
+            gameData.backpack = [];
+            updateUI();
+            loadBackpack();
+            loadSellItems();
+            loadArenaFish(); // Refresh arena fish selection
+            showNotification(`💰 Semua terjual: ${total} koin`, 'success');
+        }
+
+        // ==================== GACHA FUNCTIONS ====================
+        function spinGacha() {
+            if (gameData.coins < 500) {
+                showNotification("❌ Koin kurang!", "error");
+                return;
+            }
+            
+            gameData.coins -= 500;
+            gameData.gachaStats.totalSpins++;
+            
+            const random = Math.random() * 100;
+            let cumulative = 0;
+            let rod = gachaRods[0];
+            
+            for (const r of gachaRods) {
+                cumulative += r.chance;
+                if (random <= cumulative) {
+                    rod = r;
+                    break;
+                }
+            }
+            
+            if (!gameData.gachaStats.rodsObtained.includes(rod.id)) {
+                gameData.gachaStats.rodsObtained.push(rod.id);
+            }
+            
+            showNotification(`🎰 Dapat: ${rod.name}!`, 'success');
+            updateUI();
+        }
+
+        // ==================== ARENA FUNCTIONS ====================
+        function loadColosseum() {
+            loadArenaTiers();
+            loadArenaFish();
+            updateArenaStats();
+        }
+
+        function loadArenaTiers() {
+            const select = document.getElementById('arena-tier');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Pilih Tier</option>';
+            colosseumTiers.forEach(tier => {
+                const option = document.createElement('option');
+                option.value = tier.id;
+                option.textContent = `${tier.name} (${tier.entryFee} koin)`;
+                select.appendChild(option);
+            });
+        }
+
+        function loadArenaFish() {
+            const select = document.getElementById('arena-fish');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">Pilih Ikan</option>';
+            gameData.backpack.forEach((fish, i) => {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${fish.emoji} ${fish.name} (${fish.price} koin) - ${fish.rarity}`;
+                select.appendChild(option);
+            });
+        }
+
+        function updateArenaStats() {
+            const wins = document.getElementById('arena-wins');
+            const losses = document.getElementById('arena-losses');
+            const streak = document.getElementById('arena-streak');
+            const highest = document.getElementById('arena-highest-streak');
+            const earnings = document.getElementById('arena-total-earnings');
+            
+            if (wins) wins.textContent = gameData.colosseum.wins;
+            if (losses) losses.textContent = gameData.colosseum.losses;
+            if (streak) streak.textContent = gameData.colosseum.winStreak;
+            if (highest) highest.textContent = gameData.colosseum.highestStreak;
+            if (earnings) earnings.textContent = gameData.colosseum.totalEarnings;
+        }
+
+        function startArenaFight() {
+            const tierSelect = document.getElementById('arena-tier');
+            const fishSelect = document.getElementById('arena-fish');
+            
+            if (!tierSelect?.value || !fishSelect?.value) {
+                showNotification("❌ Pilih tier dan ikan!", "error");
+                return;
+            }
+            
+            const tier = colosseumTiers.find(t => t.id == tierSelect.value);
+            const fishIndex = parseInt(fishSelect.value);
+            
+            if (fishIndex < 0 || fishIndex >= gameData.backpack.length) {
+                showNotification("❌ Ikan tidak ditemukan!", "error");
+                return;
+            }
+            
+            const playerFish = gameData.backpack[fishIndex];
+            
+            if (gameData.coins < tier.entryFee) {
+                showNotification("❌ Koin kurang!", "error");
+                return;
+            }
+            
+            gameData.coins -= tier.entryFee;
+            
+            // Hitung chance menang berdasarkan rarity
+            let winChance = 0.5; // Default 50%
+            if (playerFish.rarity === 'legendary') winChance = 0.6;
+            if (playerFish.rarity === 'mythical') winChance = 0.7;
+            if (playerFish.rarity === 'secret') winChance = 0.8;
+            
+            if (Math.random() < winChance) {
+                const reward = Math.floor(tier.entryFee * tier.rewardMultiplier);
+                const diamond = Math.floor(Math.random() * (tier.diamondReward.max - tier.diamondReward.min + 1)) + tier.diamondReward.min;
+                
+                gameData.coins += reward;
+                gameData.diamonds += diamond;
+                gameData.colosseum.wins++;
+                gameData.colosseum.winStreak++;
+                gameData.colosseum.totalEarnings += reward;
+                
+                if (gameData.colosseum.winStreak > gameData.colosseum.highestStreak) {
+                    gameData.colosseum.highestStreak = gameData.colosseum.winStreak;
+                }
+                
+                showNotification(`🏆 MENANG! +${reward} koin, +${diamond}💎`, 'success');
+                
+                // Update mission
+                updateMissionProgress('dm3', 1);
+            } else {
+                gameData.colosseum.losses++;
+                gameData.colosseum.winStreak = 0;
+                
+                const deadFish = {...playerFish, killedBy: "NPC", deathTime: Date.now()};
+                gameData.colosseum.fishGraveyard.push(deadFish);
+                gameData.backpack.splice(fishIndex, 1);
+                
+                showNotification(`💀 KALAH! ${playerFish.name} mati...`, 'error');
+            }
+            
+            updateUI();
+            loadBackpack();
+            loadSellItems();
+            loadArenaFish();
+            updateArenaStats();
+        }
+
+        // ==================== REVIVE FUNCTIONS ====================
+        function showReviveModal() {
+            const modal = document.getElementById('revive-modal');
+            const container = document.getElementById('revive-items');
+            
+            if (!modal || !container) return;
+            
+            container.innerHTML = '';
+            
+            if (gameData.colosseum.fishGraveyard.length === 0) {
+                container.innerHTML = '<p class="empty-message">Tidak ada ikan mati</p>';
+            } else {
+                gameData.colosseum.fishGraveyard.forEach((fish, i) => {
+                    const cost = reviveCosts[fish.rarity] || 5;
+                    const div = document.createElement('div');
+                    div.className = 'item-card';
+                    div.innerHTML = `
+                        <div class="fish-emoji">${fish.emoji}</div>
+                        <div class="item-name">${fish.name}</div>
+                        <div class="item-rarity rarity-${fish.rarity}">${fish.rarity}</div>
+                        <div class="item-price">💰 ${fish.price}</div>
+                        <button class="revive-btn" onclick="reviveFish(${i})" ${gameData.diamonds < cost ? 'disabled' : ''}>
+                            Revive (${cost}💎)
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        // Global function untuk revive ikan
+        window.reviveFish = function(index) {
+            if (index < 0 || index >= gameData.colosseum.fishGraveyard.length) return;
+            
+            const fish = gameData.colosseum.fishGraveyard[index];
+            const cost = reviveCosts[fish.rarity] || 5;
+            
+            if (gameData.diamonds < cost) {
+                showNotification("❌ Berlian kurang!", "error");
+                return;
+            }
+            
+            gameData.diamonds -= cost;
+            gameData.colosseum.fishGraveyard.splice(index, 1);
+            gameData.backpack.push({...fish, revived: true, reviveTime: Date.now()});
+            
+            showNotification(`✅ ${fish.name} revived!`, 'success');
+            updateUI();
+            loadBackpack();
+            loadArenaFish();
+            showReviveModal(); // Refresh modal
+        };
+
+        // ==================== GAMEPASS FUNCTIONS ====================
+        function buyGamepass() {
+            if (gameData.diamonds < 500) {
+                showNotification("❌ Berlian kurang! Butuh 500💎", "error");
+                return;
+            }
+            
+            gameData.diamonds -= 500;
+            gameData.gamepass.active = true;
+            gameData.gamepass.premium = true;
+            gameData.gamepass.expiryDate = Date.now() + (30 * 24 * 60 * 60 * 1000);
+            
+            showNotification("🎟️ Gamepass aktif 30 hari!", 'success');
+            updateUI();
+            loadGamepass();
+        }
+
+        function loadGamepass() {
+            const levelEl = document.getElementById('gamepass-level');
+            const expEl = document.getElementById('gamepass-exp');
+            const bar = document.getElementById('gamepass-progress');
+            
+            if (levelEl) levelEl.textContent = gameData.gamepass.level;
+            
+            const nextLevelExp = gamepassExpRequirements[gameData.gamepass.level + 1] || gamepassExpRequirements[20];
+            const currentLevelExp = gamepassExpRequirements[gameData.gamepass.level];
+            const expNeeded = nextLevelExp - currentLevelExp;
+            const expProgress = gameData.gamepass.exp - currentLevelExp;
+            const progressPercent = (expProgress / expNeeded) * 100;
+            
+            if (expEl) expEl.textContent = `${gameData.gamepass.exp} / ${nextLevelExp} EXP`;
+            if (bar) bar.style.width = `${Math.min(100, progressPercent)}%`;
+        }
+
+        // ==================== DAILY MISSIONS ====================
+        function loadDailyMissions() {
+            const container = document.getElementById('daily-missions-list');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            dailyMissions.forEach(m => {
+                const div = document.createElement('div');
+                div.className = `mission-item ${m.completed ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <h4>${m.name}</h4>
+                    <p>${m.desc}</p>
+                    <div class="mission-progress">
+                        <div class="progress-bar" style="width: ${(m.progress/m.target)*100}%"></div>
+                    </div>
+                    <p>Progress: ${m.progress}/${m.target}</p>
+                    <div class="mission-reward">
+                        <span>💰 ${m.reward.coins}</span>
+                        <span>💎 ${m.reward.diamonds}</span>
+                        <span>⚡ ${m.reward.exp} EXP</span>
+                    </div>
+                    ${m.completed ? '<span class="claimed">✓ Selesai</span>' : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // ==================== ACHIEVEMENTS ====================
+        function loadAchievements() {
+            const container = document.getElementById('achievements-list');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            achievements.forEach(a => {
+                const div = document.createElement('div');
+                div.className = `achievement-item ${a.completed ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <h4>${a.name}</h4>
+                    <p>${a.desc}</p>
+                    <div class="achievement-progress">
+                        <div class="progress-bar" style="width: ${(a.progress/a.target)*100}%"></div>
+                    </div>
+                    <p>Progress: ${a.progress}/${a.target}</p>
+                    <div class="achievement-reward">
+                        <span>💎 ${a.reward.diamonds || 0}</span>
+                        ${a.reward.title ? `<span>🏆 ${a.reward.title}</span>` : ''}
+                    </div>
+                    ${a.completed && !a.claimed ? 
+                        `<button class="claim-achievement-btn" onclick="claimAchievement('${a.id}')">Claim</button>` : 
+                        a.claimed ? '<span class="claimed">✓ Claimed</span>' : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Global function untuk claim achievement
+        window.claimAchievement = function(id) {
+            const ach = achievements.find(a => a.id === id);
+            if (!ach || !ach.completed || ach.claimed) return;
+            
+            ach.claimed = true;
+            if (ach.reward.diamonds) gameData.diamonds += ach.reward.diamonds;
+            
+            showNotification(`🏆 Achievement claimed! +${ach.reward.diamonds}💎`, 'success');
+            updateUI();
+            loadAchievements();
+        };
+
+        // ==================== DIAMOND SHOP ====================
+        function loadDiamondShop() {
+            const container = document.getElementById('diamond-shop-items');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            diamondShopItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-card';
+                div.innerHTML = `
+                    <div class="fish-emoji">${item.emoji}</div>
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-price">💎 ${item.price}</div>
+                    <div class="item-luck">${item.description}</div>
+                    <button class="buy-btn" onclick="buyDiamondItem('${item.id}')" ${gameData.diamonds < item.price ? 'disabled' : ''}>
+                        Beli
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Global function untuk beli diamond item
+        window.buyDiamondItem = function(id) {
+            const item = diamondShopItems.find(i => i.id === id);
+            if (!item) return;
+            
+            if (gameData.diamonds < item.price) {
+                showNotification("❌ Berlian tidak cukup!", "error");
+                return;
+            }
+            
+            gameData.diamonds -= item.price;
+            
+            // Implementasi efek item
+            if (item.type === 'consumable') {
+                gameData.diamondShop.boosters[item.id] = (gameData.diamondShop.boosters[item.id] || 0) + 1;
+            } else if (item.type === 'booster') {
+                gameData.diamondShop.boosters[item.id] = Date.now() + (24 * 60 * 60 * 1000); // 24 jam
+            }
+            
+            showNotification(`✅ Berhasil membeli ${item.name}!`, 'success');
+            updateUI();
+            loadDiamondShop();
+        };
+
+        // ==================== SPOT FUNCTIONS ====================
+        function createSpotButtons() {
+            const container = document.getElementById('spot-buttons');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            fishingSpots.forEach(spot => {
+                const btn = document.createElement('button');
+                btn.className = 'spot-btn';
+                btn.textContent = spot.name;
+                btn.onclick = () => {
+                    currentSpot = spot.id;
+                    document.querySelectorAll('.spot-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    showNotification(`📍 Pindah ke ${spot.name}`, 'info');
+                };
+                container.appendChild(btn);
+            });
+            
+            // Set first spot active
+            const firstBtn = container.querySelector('.spot-btn');
+            if (firstBtn) firstBtn.classList.add('active');
+        }
+
+        // ==================== FILTER FUNCTIONS ====================
+        function displayFilteredBackpack(filteredFish) {
+            const container = document.getElementById('backpack-items');
+            if (!container) return;
+            
+            if (filteredFish.length === 0) {
+                container.innerHTML = '<p class="empty-message">Tidak ada ikan</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            filteredFish.forEach((fish) => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="fish-emoji">${fish.emoji}</div>
+                    <div class="item-name">${fish.name}</div>
+                    <div class="item-rarity rarity-${fish.rarity}">${fish.rarity}</div>
+                    <div class="item-price">💰 ${fish.price}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ==================== TAB SWITCHING ====================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.getElementById(tabId)?.classList.add('active');
+            
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const activeTab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+            if (activeTab) activeTab.classList.add('active');
+            
+            // Load konten tab
+            if (tabId === 'colosseum') loadColosseum();
+            if (tabId === 'gamepass') loadGamepass();
+            if (tabId === 'daily-missions') loadDailyMissions();
+            if (tabId === 'achievements') {
+                checkAchievements();
+                loadAchievements();
+            }
+            if (tabId === 'diamond-shop') loadDiamondShop();
+            if (tabId === 'shop') loadShop('rods');
+            if (tabId === 'backpack') loadBackpack();
+            if (tabId === 'sell') loadSellItems();
+        }
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🔥 GAME STARTED - FIXED VERSION!");
+            
+            loadGame();
+            
+            // Ambil semua element
+            coinsElement = document.getElementById('coins');
+            diamondsElement = document.getElementById('diamonds');
+            levelElement = document.getElementById('level');
+            fishBtn = document.getElementById('fish-btn');
+            gachaBtn = document.getElementById('gacha-btn');
+            backpackItems = document.getElementById('backpack-items');
+            shopItems = document.getElementById('shop-items');
+            sellItems = document.getElementById('sell-items');
+            sellTotal = document.getElementById('sell-total');
+            sellBtn = document.getElementById('sell-btn');
+            sellAllBtn = document.getElementById('sell-all-btn');
+            resultModal = document.getElementById('result-modal');
+            gachaModal = document.getElementById('gacha-modal');
+            arenaResultModal = document.getElementById('arena-result-modal');
+            reviveModal = document.getElementById('revive-modal');
+            arenaTierSelect = document.getElementById('arena-tier');
+            arenaFishSelect = document.getElementById('arena-fish');
+            arenaFightBtn = document.getElementById('arena-fight-btn');
+            showGraveyardBtn = document.getElementById('show-graveyard-btn');
+            buyGamepassBtn = document.getElementById('buy-gamepass-btn');
+            gamepassProgressBar = document.getElementById('gamepass-progress');
+            gamepassLevelDisplay = document.getElementById('gamepass-level');
+            gamepassExpDisplay = document.getElementById('gamepass-exp');
+            reviveItemsContainer = document.getElementById('revive-items');
+            diamondShopItemsContainer = document.getElementById('diamond-shop-items');
+            
+            // Attach event listeners
+            if (fishBtn) fishBtn.addEventListener('click', startFishing);
+            if (gachaBtn) gachaBtn.addEventListener('click', spinGacha);
+            if (arenaFightBtn) arenaFightBtn.addEventListener('click', startArenaFight);
+            if (showGraveyardBtn) showGraveyardBtn.addEventListener('click', showReviveModal);
+            if (buyGamepassBtn) buyGamepassBtn.addEventListener('click', buyGamepass);
+            if (sellAllBtn) sellAllBtn.addEventListener('click', sellAllFish);
+            
+            // Select box events
+            if (arenaTierSelect) {
+                arenaTierSelect.addEventListener('change', function() {
+                    loadArenaFish();
+                });
+            }
+            
+            // Tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+            
+            // Category buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    loadShop(this.dataset.category);
+                });
+            });
+            
+            // Search input
+            const searchFish = document.getElementById('search-fish');
+            if (searchFish) {
+                searchFish.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const filtered = gameData.backpack.filter(fish => 
+                        fish.name.toLowerCase().includes(searchTerm)
+                    );
+                    displayFilteredBackpack(filtered);
+                });
+            }
+            
+            // Sort buttons
+            const sortRarity = document.getElementById('sort-rarity');
+            if (sortRarity) {
+                sortRarity.addEventListener('click', function() {
+                    const sorted = [...gameData.backpack].sort((a, b) => {
+                        const rarityOrder = { 'basic': 1, 'legendary': 2, 'mythical': 3, 'secret': 4, 'divine': 5 };
+                        return (rarityOrder[a.rarity] || 0) - (rarityOrder[b.rarity] || 0);
+                    });
+                    displayFilteredBackpack(sorted);
+                });
+            }
+            
+            const sortPrice = document.getElementById('sort-price');
+            if (sortPrice) {
+                sortPrice.addEventListener('click', function() {
+                    const sorted = [...gameData.backpack].sort((a, b) => b.price - a.price);
+                    displayFilteredBackpack(sorted);
+                });
+            }
+            
+            const sortNewest = document.getElementById('sort-newest');
+            if (sortNewest) {
+                sortNewest.addEventListener('click', function() {
+                    const sorted = [...gameData.backpack].sort((a, b) => (b.catchTime || 0) - (a.catchTime || 0));
+                    displayFilteredBackpack(sorted);
+                });
+            }
+            
+            // Close modal buttons
+            document.querySelectorAll('.close').forEach(close => {
+                close.addEventListener('click', (e) => {
+                    const modal = e.target.closest('.modal');
+                    if (modal) modal.style.display = 'none';
+                });
+            });
+            
+            // Click outside modal to close
+            window.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    e.target.style.display = 'none';
+                }
+            });
+            
+            // Settings buttons
+            const exportBtn = document.getElementById('export-save');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    const saveData = JSON.stringify(gameData);
+                    const blob = new Blob([saveData], {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'fishing-save.json';
+                    a.click();
+                    showNotification('✅ Save diekspor!', 'success');
+                });
+            }
+            
+            const importBtn = document.getElementById('import-save');
+            if (importBtn) {
+                importBtn.addEventListener('click', function() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json';
+                    input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const save = JSON.parse(e.target.result);
+                                Object.assign(gameData, save);
+                                showNotification('✅ Save diimpor!', 'success');
+                                updateUI();
+                                loadBackpack();
+                                loadSellItems();
+                                loadColosseum();
+                            } catch (err) {
+                                showNotification('❌ File tidak valid', 'error');
+                            }
+                        };
+                        reader.readAsText(file);
+                    };
+                    input.click();
+                });
+            }
+            
+            // Initial load
+            createSpotButtons();
+            loadBackpack();
+            loadSellItems();
+            loadColosseum();
+            loadGamepass();
+            loadDailyMissions();
+            loadAchievements();
+            loadDiamondShop();
+            loadShop('rods');
+            
+            updateUI();
+            
+            // Auto-save setiap 30 detik
+            setInterval(saveGame, 30000);
+            
+            console.log("✅ SEMUA SIAP! Tombol-tombol sudah berfungsi.");
+        });
+    </script>
+</body>
+</html>
